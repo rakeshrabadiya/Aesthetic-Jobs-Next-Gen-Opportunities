@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Aesthetic Jobs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding-top: 4rem;
+        }
+        .about-text {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 2rem;
+            border-radius: 20px;
+            backdrop-filter: blur(12px);
+            transition: transform var(--transition-fast);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-mesh">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div class="app-container">
+        <nav class="navbar animate-in">
+            <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">AJ.</a></div>
+            <div class="nav-links">
+                <a href="/">Discover</a>
+                <a href="/companies">Companies</a>
+                <a href="/about" class="active">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/post-job" class="highlight-link">Post a Job</a>
+            </div>
+            <button class="btn-primary login-btn">Sign In</button>
+        </nav>
+
+        <main class="main-content">
+            <div class="about-content">
+                <h1 class="hero-title animate-in stagger-1">We curate the best<br><span class="highlight">aesthetic</span> opportunities.</h1>
+                <p class="about-text animate-in stagger-2">We believe that beautiful software is built by people who care deeply about design. Our mission is to connect top-tier design-oriented engineers and product creators with companies that value aesthetics as a core feature, not an afterthought.</p>
+                <p class="about-text animate-in stagger-3">Founded in 2026, Aesthetic Jobs (AJ.) has quickly become the premier destination for next-generation talent.</p>
+
+                <div class="stat-grid animate-in stagger-4">
+                    <div class="stat-card">
+                        <div class="stat-number">10k+</div>
+                        <div style="color: var(--text-secondary)">Placements Made</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">500+</div>
+                        <div style="color: var(--text-secondary)">Partner Companies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">#1</div>
+                        <div style="color: var(--text-secondary)">Design Job Board</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Minimal script just for blob background movement on static pages
+        document.addEventListener('mousemove', (e) => {
+            const blobs = document.querySelectorAll('.blob');
+            const mouseX = e.clientX / window.innerWidth - 0.5;
+            const mouseY = e.clientY / window.innerHeight - 0.5;
+            blobs.forEach((blob, index) => {
+                const speed = (index + 1) * 20;
+                blob.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>

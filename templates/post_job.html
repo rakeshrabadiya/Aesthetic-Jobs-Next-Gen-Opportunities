@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Job | Aesthetic Jobs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/modal.css">
+    <style>
+        .post-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding-top: 2rem;
+        }
+        .contact-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 3rem;
+            backdrop-filter: blur(12px);
+            margin-bottom: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-mesh">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div class="app-container">
+        <nav class="navbar animate-in">
+            <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">AJ.</a></div>
+            <div class="nav-links">
+                <a href="/">Discover</a>
+                <a href="/companies">Companies</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/post-job" class="highlight-link active">Post a Job</a>
+            </div>
+            <button class="btn-primary login-btn">Sign In</button>
+        </nav>
+
+        <main class="main-content">
+            <div class="post-container animate-in stagger-1">
+                <div style="text-align: center; margin-bottom: 3rem;">
+                    <h1 class="hero-title" style="font-size: 3rem;">Hire the <span class="highlight">best</span>.</h1>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem;">Reach thousands of design-oriented engineers.</p>
+                </div>
+                
+                <div class="contact-card">
+                    <form id="post-job-form" class="aesthetic-form">
+                        <div class="form-group">
+                            <label>Job Title <span class="required">*</span></label>
+                            <input type="text" name="title" required placeholder="e.g. Senior Frontend Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label>Company Name <span class="required">*</span></label>
+                            <input type="text" name="company" required placeholder="e.g. Nexus Corp">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="location" placeholder="e.g. Remote, or New York, NY">
+                            </div>
+                            <div class="form-group">
+                                <label>Salary Range</label>
+                                <input type="text" name="salary" placeholder="e.g. $130k - $160k">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Tags (Comma separated)</label>
+                            <input type="text" name="tags" placeholder="e.g. React, UI/UX, TypeScript">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Description</label>
+                            <textarea name="description" rows="4" placeholder="Describe the role..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Requirements (One per line)</label>
+                            <textarea name="requirements" rows="4" placeholder="- Expert in CSS&#10;- 5+ years experience"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary w-full" id="btn-submit-job" style="margin-top: 1.5rem;">
+                            <span>Post Job ($299)</span>
+                            <div class="spinner-small" style="display: none;"></div>
+                        </button>
+                    </form>
+                    
+                    <div id="post-success-msg" class="success-message" style="display: none;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        <h3>Job Posted!</h3>
+                        <p>Your job listing is now live on the platform.</p>
+                        <a href="/" class="btn-secondary" style="display: inline-block; margin-top: 2rem; text-decoration: none;">View Listings</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const blobs = document.querySelectorAll('.blob');
+            const mouseX = e.clientX / window.innerWidth - 0.5;
+            const mouseY = e.clientY / window.innerHeight - 0.5;
+            blobs.forEach((blob, index) => {
+                const speed = (index + 1) * 20;
+                blob.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
+            });
+        });
+
+        document.getElementById('post-job-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = document.getElementById('btn-submit-job');
+            
+            btn.disabled = true;
+            btn.querySelector('span').style.display = 'none';
+            btn.querySelector('.spinner-small').style.display = 'inline-block';
+
+            const formData = new FormData(form);
+
+            try {
+                await new Promise(r => setTimeout(r, 1200)); // aesthetic delay
+                const response = await fetch('/api/post-job', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    form.style.display = 'none';
+                    document.getElementById('post-success-msg').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.message);
+                    btn.disabled = false;
+                    btn.querySelector('span').style.display = 'inline-block';
+                    btn.querySelector('.spinner-small').style.display = 'none';
+                }
+            } catch (err) {
+                alert('Connection error');
+                btn.disabled = false;
+                btn.querySelector('span').style.display = 'inline-block';
+                btn.querySelector('.spinner-small').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

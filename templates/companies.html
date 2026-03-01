@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Companies | Aesthetic Jobs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .companies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .company-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            transition: all var(--transition-medium);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .company-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 30px -10px rgba(168, 85, 247, 0.2);
+        }
+        .company-logo-placeholder {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
+            border-radius: 20px;
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .company-name {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .open-positions {
+            color: #a855f7;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-mesh">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div class="app-container">
+        <nav class="navbar animate-in">
+            <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">AJ.</a></div>
+            <div class="nav-links">
+                <a href="/">Discover</a>
+                <a href="/companies" class="active">Companies</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+                <a href="/post-job" class="highlight-link">Post a Job</a>
+            </div>
+            <button class="btn-primary login-btn">Sign In</button>
+        </nav>
+
+        <main class="main-content">
+            <header class="hero-section" style="padding-bottom: 2rem;">
+                <h1 class="hero-title animate-in stagger-1" style="font-size: 3.5rem;">Partner <span class="highlight">Companies</span>.</h1>
+                <p class="hero-subtitle animate-in stagger-2" style="margin-bottom: 0;">Explore organizations pushing the boundaries of digital aesthetics.</p>
+            </header>
+
+            <div class="companies-grid" id="companies-grid">
+                <!-- Javascript will inject mock companies here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('mousemove', (e) => {
+            const blobs = document.querySelectorAll('.blob');
+            const mouseX = e.clientX / window.innerWidth - 0.5;
+            const mouseY = e.clientY / window.innerHeight - 0.5;
+            blobs.forEach((blob, index) => {
+                const speed = (index + 1) * 20;
+                blob.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
+            });
+        });
+
+        // Mock Companies Data
+        const companies = [
+            { name: "Nexus Corp", positions: 12, initial: "N" },
+            { name: "Aether Data", positions: 8, initial: "A" },
+            { name: "Zenith Studios", positions: 24, initial: "Z" },
+            { name: "Quantum", positions: 5, initial: "Q" },
+            { name: "Synapse AI", positions: 18, initial: "S" },
+            { name: "CloudScape", positions: 3, initial: "C" },
+            { name: "Visionary Labs", positions: 9, initial: "V" },
+            { name: "Fluid Dynamics", positions: 14, initial: "F" }
+        ];
+
+        const grid = document.getElementById('companies-grid');
+        companies.forEach((company, index) => {
+            const card = document.createElement('div');
+            card.className = 'company-card animate-in';
+            card.style.animationDelay = `${0.1 + (index * 0.1)}s`;
+            
+            card.innerHTML = `
+                <div class="company-logo-placeholder">${company.initial}</div>
+                <h3 class="company-name">${company.name}</h3>
+                <div class="open-positions">${company.positions} Open Roles</div>
+            `;
+            
+            // Hover glare tracking
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+            
+            // Add pseudo-element background purely in javascript via style element to keep HTML clean
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .company-card:nth-child(${index + 1})::before {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; width: 100%; height: 100%;
+                    background: radial-gradient(400px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(168, 85, 247, 0.15), transparent 40%);
+                    z-index: 0; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+                }
+                .company-card:nth-child(${index + 1}):hover::before { opacity: 1; }
+                .company-card:nth-child(${index + 1}) > * { position: relative; z-index: 1; }
+            `;
+            document.head.appendChild(style);
+
+            grid.appendChild(card);
+        });
+    </script>
+</body>
+</html>
