@@ -140,6 +140,25 @@ def apply_for_job():
     
     return jsonify({"status": "success", "message": "Application submitted successfully!"})
 
+@app.route("/api/login", methods=["POST"])
+def mock_login():
+    data = request.json
+    if not data or not data.get("email") or not data.get("password"):
+        return jsonify({"status": "error", "message": "Email and password required"}), 400
+    
+    import time
+    time.sleep(1) # Artificial aesthetic delay
+    print(f"[*] Mock user logged in with email: {data.get('email')}")
+    
+    return jsonify({
+        "status": "success", 
+        "message": "Logged in successfully!",
+        "user": {
+            "name": data.get("email").split("@")[0].capitalize(),
+            "email": data.get("email")
+        }
+    })
+
 @app.route("/api/post-job", methods=["POST"])
 def create_job():
     data = request.form
