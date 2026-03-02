@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('.search-input');
     const filterChips = document.querySelectorAll('.filter-chip');
     
-    // Modal Elements
+    // Apply Form Modal Elements
     const modal = document.getElementById('job-modal');
     const modalClose = document.getElementById('modal-close');
     const viewDetails = document.getElementById('modal-view-details');
@@ -20,8 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const applySuccessMsg = document.getElementById('apply-success-msg');
     const btnCloseSuccess = document.getElementById('btn-close-success');
     
+    // Login Modal Elements
+    const loginBtns = document.querySelectorAll('.login-btn');
+    const loginModal = document.getElementById('login-modal');
+    const loginModalClose = document.getElementById('login-modal-close');
+    const loginForm = document.getElementById('login-form');
+    const loginViewForm = document.getElementById('login-view-form');
+    const loginViewSuccess = document.getElementById('login-view-success');
+    const authUserName = document.getElementById('auth-user-name');
+    const btnSubmitLogin = document.getElementById('btn-submit-login');
+    
+    // Global State
     let allJobs = [];
     let currentJob = null;
+    let isAuthenticated = localStorage.getItem('auth_user') ? true : false;
+
+    // Initialize UI Auth State on Load
+    updateAuthUI();
 
     // Setup interactive background mouse tracking
     if(jobsContainer) setupMouseTracking();
@@ -49,16 +64,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Modal Global Listeners
+    // Application Modal Global Listeners
     if(modalClose) modalClose.addEventListener('click', closeModal);
     if(btnStartApply) btnStartApply.addEventListener('click', () => switchModalView('apply'));
     if(btnBackDetails) btnBackDetails.addEventListener('click', () => switchModalView('details'));
     if(btnCloseSuccess) btnCloseSuccess.addEventListener('click', closeModal);
     
     if(modal) {
-        // Close modal if clicking overlay background
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
+        });
+    }
+
+    // Login Modal Global Listeners
+    if (loginBtns.length > 0) {
+        loginBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isAuthenticated) {
+                    // Handle Sign Out
+                    isAuthenticated = false;
+                    localStorage.removeItem('auth_user');
+                    updateAuthUI();
+                } else {
+                    openLoginModal();
+                }
+            });
+        });
+    }
+    
+    if (loginModalClose) loginModalClose.addEventListener('click', closeLoginModal);
+    if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) closeLoginModal();
         });
     }
 
@@ -93,16 +130,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    showSuccessMessage();
+                    showSuccessMessage('apply');
                 } else {
                     alert('Error: ' + data.message);
-                    resetSubmitButton();
+                    resetSubmitButton('apply');
                 }
 
             } catch (error) {
                 console.error("Submission error", error);
                 alert("Failed to submit application. Please try again.");
-                resetSubmitButton();
+                resetSubmitButton('apply');
+            }
+        });
+    }
+
+    // Handle Login Form Submission
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            btnSubmitLogin.disabled = true;
+            btnSubmitLogin.querySelector('span').style.display = 'none';
+            btnSubmitLogin.querySelector('.spinner-small').style.display = 'inline-block';
+
+            const payload = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    isAuthenticated = true;
+                    localStorage.setItem('auth_user', data.user.name);
+                    
+                    // Show success state in modal
+                    if (authUserName) authUserName.innerText = data.user.name;
+                    showSuccessMessage('login');
+                    
+                    // Update main UI buttons, close modal automatically after delay
+                    setTimeout(() => {
+                        updateAuthUI();
+                        closeLoginModal();
+                    }, 1500);
+                } else {
+                    alert('Error: ' + data.message);
+                    resetSubmitButton('login');
+                }
+
+            } catch (error) {
+                console.error("Login error", error);
+                alert("Failed to sign in. Please try again.");
+                resetSubmitButton('login');
             }
         });
     }
@@ -263,15 +349,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function resetSubmitButton() {
-        btnSubmitApply.disabled = false;
-        btnSubmitApply.querySelector('span').style.display = 'inline';
-        btnSubmitApply.querySelector('.spinner-small').style.display = 'none';
+    function resetSubmitButton(type) {
+        if (type === 'apply') {
+            btnSubmitApply.disabled = false;
+            btnSubmitApply.querySelector('span').style.display = 'inline';
+            btnSubmitApply.querySelector('.spinner-small').style.display = 'none';
+        } else if (type === 'login') {
+            btnSubmitLogin.disabled = false;
+            btnSubmitLogin.querySelector('span').style.display = 'inline';
+            btnSubmitLogin.querySelector('.spinner-small').style.display = 'none';
+        }
     }
 
-    function showSuccessMessage() {
-        applyForm.style.display = 'none';
-        applySuccessMsg.style.display = 'block';
+    function showSuccessMessage(type) {
+        if (type === 'apply') {
+            applyForm.style.display = 'none';
+            applySuccessMsg.style.display = 'block';
+        } else if (type === 'login') {
+            loginViewForm.classList.remove('active');
+            loginViewSuccess.classList.add('active');
+        }
+    }
+
+    // =========================================
+    // Authentication Logic & UI
+    // =========================================
+    
+    function updateAuthUI() {
+        // Toggle all login buttons to say "Sign Out" if logged in
+        if (loginBtns.length > 0) {
+            loginBtns.forEach(btn => {
+                if (isAuthenticated) {
+                    btn.innerText = "Sign Out";
+                    btn.style.background = "transparent";
+                    btn.style.border = "1px solid var(--card-border)";
+                    btn.style.color = "var(--text-secondary)";
+                } else {
+                    btn.innerText = "Sign In";
+                    btn.style.background = "var(--btn-primary)";
+                    btn.style.border = "none";
+                    btn.style.color = "var(--btn-primary-text)";
+                }
+            });
+        }
+    }
+    
+    function openLoginModal() {
+        if(!loginModal) return;
+        
+        // Reset state
+        loginForm.reset();
+        loginViewForm.classList.add('active');
+        loginViewSuccess.classList.remove('active');
+        resetSubmitButton('login');
+        
+        // Show
+        loginModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeLoginModal() {
+        if(!loginModal) return;
+        loginModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
 
     // =========================================
