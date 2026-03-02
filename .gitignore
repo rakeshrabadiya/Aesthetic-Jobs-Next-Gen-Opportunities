@@ -1,0 +1,17 @@
+# Python Environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+
+# User Setup Scripts
+Start_Server.bat
+Stop_Server.bat

@@ -154,13 +154,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Mouse tracking for hover effect glow
+            // Mouse tracking for hover effect glow - Throttled
+            let cardTicking = false;
             card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                card.style.setProperty('--mouse-x', `${x}px`);
-                card.style.setProperty('--mouse-y', `${y}px`);
+                if (!cardTicking) {
+                    window.requestAnimationFrame(() => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        card.style.setProperty('--mouse-x', `${x}px`);
+                        card.style.setProperty('--mouse-y', `${y}px`);
+                        cardTicking = false;
+                    });
+                    cardTicking = true;
+                }
             });
 
             // Open Modal on Card Click
@@ -272,13 +279,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================
     function setupMouseTracking() {
         const blobs = document.querySelectorAll('.blob');
+        let ticking = false;
+        
         document.addEventListener('mousemove', (e) => {
-            const mouseX = e.clientX / window.innerWidth - 0.5;
-            const mouseY = e.clientY / window.innerHeight - 0.5;
-            blobs.forEach((blob, index) => {
-                const speed = (index + 1) * 20;
-                blob.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
-            });
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const mouseX = e.clientX / window.innerWidth - 0.5;
+                    const mouseY = e.clientY / window.innerHeight - 0.5;
+                    blobs.forEach((blob, index) => {
+                        const speed = (index + 1) * 20;
+                        blob.style.transform = `translate3d(${mouseX * speed}px, ${mouseY * speed}px, 0)`;
+                    });
+                    ticking = false;
+                });
+                ticking = true;
+            }
         });
     }
 });

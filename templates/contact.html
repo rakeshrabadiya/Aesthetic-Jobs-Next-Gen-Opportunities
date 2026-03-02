@@ -80,14 +80,22 @@
     </div>
 
     <script>
+        const blobs = document.querySelectorAll('.blob');
+        let ticking = false;
+        
         document.addEventListener('mousemove', (e) => {
-            const blobs = document.querySelectorAll('.blob');
-            const mouseX = e.clientX / window.innerWidth - 0.5;
-            const mouseY = e.clientY / window.innerHeight - 0.5;
-            blobs.forEach((blob, index) => {
-                const speed = (index + 1) * 20;
-                blob.style.transform = `translate(${mouseX * speed}px, ${mouseY * speed}px)`;
-            });
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const mouseX = e.clientX / window.innerWidth - 0.5;
+                    const mouseY = e.clientY / window.innerHeight - 0.5;
+                    blobs.forEach((blob, index) => {
+                        const speed = (index + 1) * 20;
+                        blob.style.transform = `translate3d(${mouseX * speed}px, ${mouseY * speed}px, 0)`;
+                    });
+                    ticking = false;
+                });
+                ticking = true;
+            }
         });
     </script>
 </body>
