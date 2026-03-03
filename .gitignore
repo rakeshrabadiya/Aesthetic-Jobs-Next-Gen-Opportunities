@@ -15,3 +15,7 @@ Thumbs.db
 # User Setup Scripts
 Start_Server.bat
 Stop_Server.bat
+
+# Local database
+data.db
+
