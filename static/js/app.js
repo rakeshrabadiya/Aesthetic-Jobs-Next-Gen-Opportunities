@@ -506,9 +506,40 @@ function initThreeScene(container) {
     }
 
     // Create fewer, larger, softer-moving objects
-    makeObject(new THREE.TorusGeometry(24, 6, 64, 128), palette[0], 1.0, -50, -8, -30);
-    makeObject(new THREE.IcosahedronGeometry(16, 2), palette[1], 1.0, 38, 18, -20);
-    makeObject(new THREE.TorusGeometry(18, 3.5, 48, 128), palette[2], 1.0, 10, 40, -40);
+    // Attempt to load a small GLTF model as a centerpiece; fallback to primitives if loading fails
+    const loader = (window.THREE && window.THREE.GLTFLoader) ? new THREE.GLTFLoader() : null;
+    const gltfUrl = 'https://threejs.org/examples/models/gltf/Duck/glTF/Duck.gltf';
+    let gltfLoaded = false;
+
+    if (loader) {
+        loader.load(gltfUrl, (gltf) => {
+            const model = gltf.scene;
+            model.traverse((n) => { if (n.isMesh) n.material = n.material.clone(); });
+            model.scale.setScalar(12);
+            model.position.set(0, 0, -25);
+            model.userData = { baseX: 0, baseY: 0, baseZ: -25, scale: 1.0 };
+            scene.add(model);
+            objects.push(model);
+            gltfLoaded = true;
+        }, undefined, (err) => {
+            console.warn('GLTF load failed, using primitives', err);
+            makeObject(new THREE.TorusGeometry(24, 6, 64, 128), palette[0], 1.0, -50, -8, -30);
+            makeObject(new THREE.IcosahedronGeometry(16, 2), palette[1], 1.0, 38, 18, -20);
+            makeObject(new THREE.TorusGeometry(18, 3.5, 48, 128), palette[2], 1.0, 10, 40, -40);
+        });
+        // also set a timeout fallback to primitives
+        setTimeout(() => { if (!gltfLoaded) {
+            if (objects.length === 0) {
+                makeObject(new THREE.TorusGeometry(24, 6, 64, 128), palette[0], 1.0, -50, -8, -30);
+                makeObject(new THREE.IcosahedronGeometry(16, 2), palette[1], 1.0, 38, 18, -20);
+                makeObject(new THREE.TorusGeometry(18, 3.5, 48, 128), palette[2], 1.0, 10, 40, -40);
+            }
+        }}, 900);
+    } else {
+        makeObject(new THREE.TorusGeometry(24, 6, 64, 128), palette[0], 1.0, -50, -8, -30);
+        makeObject(new THREE.IcosahedronGeometry(16, 2), palette[1], 1.0, 38, 18, -20);
+        makeObject(new THREE.TorusGeometry(18, 3.5, 48, 128), palette[2], 1.0, 10, 40, -40);
+    }
 
     // Handle resize
     window.addEventListener('resize', () => {
@@ -518,12 +549,81 @@ function initThreeScene(container) {
         camera.updateProjectionMatrix();
     });
 
+    // ---------- Postprocessing (bloom) ----------
+    let composer;
+    try {
+        const renderPass = new THREE.RenderPass(scene, camera);
+        const params = { strength: 0.9, radius: 0.2, threshold: 0.6 };
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(width, height), params.strength, params.radius, params.threshold);
+        composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderPass);
+        composer.addPass(bloomPass);
+    } catch (err) {
+        composer = null;
+        console.warn('Postprocessing not available:', err);
+    }
+
     // Mouse influence (normalized)
     const mouse = new THREE.Vector2(0, 0);
     window.addEventListener('mousemove', (e) => {
         mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     });
+
+    // Raycaster for hover / click interactions
+    const raycaster = new THREE.Raycaster();
+    let hovered = null;
+
+    function handlePointer(x, y, isClick = false) {
+        const nx = (x / window.innerWidth) * 2 - 1;
+        const ny = -(y / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera({ x: nx, y: ny }, camera);
+        const intersects = raycaster.intersectObjects(objects, false);
+        if (intersects.length > 0) {
+            const hit = intersects[0].object;
+            if (hovered !== hit) {
+                if (hovered) {
+                    // reset previous
+                    hovered.material.emissiveIntensity = 0.2;
+                    hovered.scale.lerp(new THREE.Vector3(hovered.userData.scale, hovered.userData.scale, hovered.userData.scale), 0.2);
+                }
+                hovered = hit;
+                // highlight
+                hovered.material.emissiveIntensity = 0.9;
+                hovered.scale.lerp(new THREE.Vector3(hovered.userData.scale * 1.15, hovered.userData.scale * 1.15, hovered.userData.scale * 1.15), 0.24);
+                // reflect to cursor
+                const cursor = document.getElementById('custom-cursor');
+                if (cursor) cursor.classList.add('custom-cursor--active');
+            }
+            if (isClick) {
+                // click pulse
+                const original = hovered.scale.clone();
+                const tl = { t: 0 };
+                // simple pulse animation
+                const start = performance.now();
+                const pulse = () => {
+                    const elapsed = performance.now() - start;
+                    const p = Math.min(1, elapsed / 300);
+                    const s = 1 + Math.sin(p * Math.PI) * 0.22;
+                    hovered.scale.setScalar(hovered.userData.scale * s);
+                    if (p < 1) requestAnimationFrame(pulse);
+                };
+                pulse();
+            }
+        } else {
+            if (hovered) {
+                hovered.material.emissiveIntensity = 0.2;
+                hovered.scale.lerp(new THREE.Vector3(hovered.userData.scale, hovered.userData.scale, hovered.userData.scale), 0.18);
+                hovered = null;
+                const cursor = document.getElementById('custom-cursor');
+                if (cursor) cursor.classList.remove('custom-cursor--active');
+            }
+        }
+    }
+
+    // global pointer listeners for interaction
+    window.addEventListener('pointermove', (e) => handlePointer(e.clientX, e.clientY));
+    window.addEventListener('pointerdown', (e) => handlePointer(e.clientX, e.clientY, true));
 
     // animation loop with nicer motion and soft repulsion when cursor is near an object
     function animate() {
@@ -564,7 +664,8 @@ function initThreeScene(container) {
         camera.position.y += (mouse.y * 18 - camera.position.y) * 0.02;
         camera.lookAt(0, 0, 0);
 
-        renderer.render(scene, camera);
+        if (composer) composer.render();
+        else renderer.render(scene, camera);
     }
 
     animate();
