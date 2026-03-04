@@ -38,6 +38,52 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  }
+
+  /* 3D canvas and custom cursor styles */
+  .three-canvas-container {
+    position: fixed;
+    inset: 0; /* fill viewport */
+    pointer-events: none; /* allow clicks through by default */
+    z-index: 0; /* behind UI elements which have higher z */
+  }
+
+  .three-canvas-container canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Custom cursor */
+  .custom-cursor {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    margin-top: -14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(168,85,247,0.15));
+    box-shadow: 0 6px 24px rgba(168,85,247,0.12), 0 2px 6px rgba(0,0,0,0.12);
+    transform: translate3d(0,0,0) scale(1);
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), background 180ms;
+    pointer-events: none;
+    z-index: 10000;
+  }
+
+  .custom-cursor--active {
+    transform: translate3d(0,0,0) scale(1.8);
+    background: radial-gradient(circle at 30% 30%, rgba(168,85,247,0.95), rgba(168,85,247,0.25));
+  }
+
+  /* Small trailing particles */
+  .cursor-trail {
+    position: fixed;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 9999;
 }
 
 /* =========================================

@@ -437,3 +437,190 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+/* ------------------------------------------------------------------
+   3D Scene (Three.js) + Custom Cursor / Trail
+   - creates a subtle 3D scene in the background
+   - cursor with antigravity-like trail and hover scaling
+------------------------------------------------------------------ */
+document.addEventListener('DOMContentLoaded', () => {
+    // init only if three container exists and Three is loaded
+    const threeContainer = document.getElementById('three-container');
+    const cursorEl = document.getElementById('custom-cursor');
+    const trailContainer = document.getElementById('cursor-trail');
+
+    if (threeContainer && window.THREE) {
+        initThreeScene(threeContainer);
+    }
+
+    if (cursorEl) {
+        initCustomCursor(cursorEl, trailContainer);
+    }
+});
+
+function initThreeScene(container) {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
+    camera.position.set(0, 0, 140);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.domElement.style.pointerEvents = 'none';
+    // subtle CSS glow via filter (keeps shader simple)
+    renderer.domElement.style.filter = 'saturate(1.05) drop-shadow(0 20px 40px rgba(168,85,247,0.06))';
+    container.appendChild(renderer.domElement);
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+    const hemi = new THREE.HemisphereLight(0xffffee, 0x220022, 0.4);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+    dir.position.set(0.5, 1, 0.5);
+    scene.add(ambient, hemi, dir);
+
+    // improved materials and palette
+    const palette = [0xa855f7, 0x7c3aed, 0x60a5fa];
+
+    const objects = [];
+
+    function makeObject(geom, color, scale, x, y, z) {
+        const mat = new THREE.MeshStandardMaterial({
+            color: color,
+            emissive: color * 0.08,
+            metalness: 0.15,
+            roughness: 0.4,
+            transparent: true,
+            opacity: 0.98
+        });
+        const m = new THREE.Mesh(geom, mat);
+        m.castShadow = false;
+        m.receiveShadow = false;
+        m.scale.setScalar(scale);
+        m.position.set(x, y, z);
+        m.userData = { baseX: x, baseY: y, baseZ: z, scale: scale };
+        scene.add(m);
+        objects.push(m);
+    }
+
+    // Create fewer, larger, softer-moving objects
+    makeObject(new THREE.TorusGeometry(24, 6, 64, 128), palette[0], 1.0, -50, -8, -30);
+    makeObject(new THREE.IcosahedronGeometry(16, 2), palette[1], 1.0, 38, 18, -20);
+    makeObject(new THREE.TorusGeometry(18, 3.5, 48, 128), palette[2], 1.0, 10, 40, -40);
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+        const w = window.innerWidth, h = window.innerHeight;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+    });
+
+    // Mouse influence (normalized)
+    const mouse = new THREE.Vector2(0, 0);
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    // animation loop with nicer motion and soft repulsion when cursor is near an object
+    function animate() {
+        requestAnimationFrame(animate);
+        const time = performance.now() * 0.001;
+
+        objects.forEach((obj, i) => {
+            // relaxed rotation and breathing
+            obj.rotation.x += 0.002 * (1 + i * 0.2);
+            obj.rotation.y += 0.003 * (1 + i * 0.15);
+            const bob = Math.sin(time * (0.4 + i * 0.15)) * (6 + i * 2);
+            const targetX = obj.userData.baseX + mouse.x * 12;
+            const targetY = obj.userData.baseY + mouse.y * 12 + bob;
+
+            // project to NDC to compute screen distance for repulsion
+            const v = obj.position.clone();
+            v.project(camera);
+            const ndc = new THREE.Vector2(v.x, v.y);
+            const d = ndc.distanceTo(mouse);
+            let repel = new THREE.Vector3(0, 0, 0);
+            if (d < 0.18) {
+                // push away from cursor in screen space then map back roughly
+                const strength = (0.18 - d) * 36;
+                repel.x = (ndc.x - mouse.x) * strength;
+                repel.y = (ndc.y - mouse.y) * strength;
+            }
+
+            // smoothly move towards target plus repulsion
+            obj.position.x += ((targetX + repel.x * 8) - obj.position.x) * 0.06;
+            obj.position.y += ((targetY + repel.y * 8) - obj.position.y) * 0.06;
+
+            // subtle scale pulse
+            const s = obj.userData.scale * (1 + Math.sin(time * (0.6 + i * 0.2)) * 0.035);
+            obj.scale.lerp(new THREE.Vector3(s, s, s), 0.08);
+        });
+
+        camera.position.x += (mouse.x * 18 - camera.position.x) * 0.02;
+        camera.position.y += (mouse.y * 18 - camera.position.y) * 0.02;
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+}
+
+function initCustomCursor(cursorEl, trailContainer) {
+    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let pos = { x: mouse.x, y: mouse.y };
+
+    // Smooth follow
+    function raf() {
+        pos.x += (mouse.x - pos.x) * 0.18;
+        pos.y += (mouse.y - pos.y) * 0.18;
+        cursorEl.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+        requestAnimationFrame(raf);
+    }
+    raf();
+
+    // create trail particles
+    const particles = [];
+    function spawnParticle(x, y) {
+        const el = document.createElement('div');
+        el.style.position = 'fixed';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.width = '8px';
+        el.style.height = '8px';
+        el.style.borderRadius = '50%';
+        el.style.pointerEvents = 'none';
+        el.style.background = 'rgba(168,85,247,0.18)';
+        el.style.transform = 'translate3d(-50%,-50%,0) scale(1)';
+        el.style.transition = 'opacity 520ms linear, transform 520ms cubic-bezier(.2,.8,.2,1)';
+        trailContainer.appendChild(el);
+        particles.push(el);
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translate3d(-50%,-50%,0) scale(2)';
+        });
+
+        setTimeout(() => {
+            el.remove();
+        }, 600);
+    }
+
+    // mouse handlers
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        spawnParticle(e.clientX, e.clientY);
+    }, { passive: true });
+
+    // interactive element hover effect
+    const interactive = Array.from(document.querySelectorAll('a, button, .job-card'));
+    interactive.forEach(el => {
+        el.addEventListener('mouseenter', () => cursorEl.classList.add('custom-cursor--active'));
+        el.addEventListener('mouseleave', () => cursorEl.classList.remove('custom-cursor--active'));
+    });
+}

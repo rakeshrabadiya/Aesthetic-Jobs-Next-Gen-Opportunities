@@ -23,6 +23,12 @@
       <div class="noise-overlay"></div>
     </div>
 
+        <!-- 3D Canvas (fills viewport, behind UI) -->
+        <div class="three-canvas-container" id="three-container"></div>
+        <!-- Custom cursor and trail -->
+        <div class="cursor-trail" id="cursor-trail"></div>
+        <div class="custom-cursor" id="custom-cursor" aria-hidden="true"></div>
+
     <div class="app-container">
         <nav class="navbar animate-in">
             <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">AJ.</a></div>
@@ -198,6 +204,7 @@
       </main>
     </div>
 
-    <script src="/static/js/app.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+        <script src="/static/js/app.js"></script>
   </body>
 </html>
