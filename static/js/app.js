@@ -8,6 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('.search-input');
     const filterChips = document.querySelectorAll('.filter-chip');
     
+    // loader elements
+    const loaderOverlay = document.getElementById('loader-overlay');
+    const loaderCanvas = document.getElementById('loader-canvas');
+
+    if (loaderOverlay) {
+        // hide after window load or 2.5s, whichever comes later
+        window.addEventListener('load', () => {
+            setTimeout(() => loaderOverlay.classList.add('hidden'), 800);
+        });
+        setTimeout(() => loaderOverlay.classList.add('hidden'), 2500);
+        initLoaderParticles(loaderCanvas);
+    }
+
     // Apply Form Modal Elements
     const modal = document.getElementById('job-modal');
     const modalClose = document.getElementById('modal-close');
@@ -371,6 +384,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // fun facts
+    const factBtn = document.getElementById('fun-fact-btn');
+    const factText = document.getElementById('fun-fact-text');
+    const facts = [
+        "Aesthetic Jobs runs on purple vibes and good coffee.",
+        "The first job posted was for a neon sign designer.",
+        "81% of users prefer our site because of the soothing animations.",
+        "Random fact: " + new Date().toLocaleDateString()
+    ];
+    if (factBtn && factText) {
+        factBtn.addEventListener('click', () => {
+            const f = facts[Math.floor(Math.random() * facts.length)];
+            factText.innerText = f;
+        });
+    }
+
+    // scroll reveal observer
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                observer.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.2 });
+    document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
     // =========================================
     // Authentication Logic & UI
     // =========================================
@@ -444,6 +484,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const trailContainer = document.getElementById('cursor-trail');
     if (cursorEl) initCustomCursor(cursorEl, trailContainer);
 });
+
+function initLoaderParticles(canvas) {
+    if (!canvas) return;
+    const particles = [];
+    function spawn(x, y) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        canvas.appendChild(p);
+        particles.push(p);
+        setTimeout(() => p.remove(), 1200);
+    }
+    canvas.addEventListener('mousemove', e => spawn(e.offsetX, e.offsetY));
+    canvas.addEventListener('click', e => {
+        for (let i = 0; i < 4; i++) spawn(e.offsetX, e.offsetY);
+    });
+}
 
 function initCustomCursor(cursorEl, trailContainer) {
     let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };

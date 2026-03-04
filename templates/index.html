@@ -15,6 +15,20 @@
     <link rel="stylesheet" href="/static/css/modal.css">
   </head>
   <body>
+    <!-- Full‑screen Loader Overlay -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="loader-content">
+            <div class="loader-logo">AJ.</div>
+            <div class="loader-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <p class="loader-text">Loading your next aesthetic opportunity...</p>
+        </div>
+        <div id="loader-canvas" class="loader-canvas"></div>
+    </div>
+
     <!-- Animated Background Elements -->
     <div class="background-mesh">
       <div class="blob blob-1"></div>
@@ -57,6 +71,18 @@
           <button class="btn-primary search-btn">Search</button>
         </div>
       </header>
+
+      <!-- Additional informational sections -->
+      <section class="info-section animate-in stagger-5" id="how-it-works">
+        <h2>How It Works</h2>
+        <p>Browse curated, design‑centric roles. Apply with one click. Get hired fast – no fluff.</p>
+      </section>
+
+      <section class="info-section animate-in stagger-6" id="fun-facts">
+        <h2>Fun Facts</h2>
+        <p id="fun-fact-text">Click the button for a random fun fact!</p>
+        <button id="fun-fact-btn" class="btn-secondary">Show Fact</button>
+      </section>
 
       <main class="main-content">
         <div class="filters animate-in stagger-4">
