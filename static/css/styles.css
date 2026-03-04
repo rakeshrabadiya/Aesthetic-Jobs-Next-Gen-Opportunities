@@ -47,22 +47,23 @@ body {
     position: fixed;
     left: 0;
     top: 0;
-    width: 28px;
-    height: 28px;
-    margin-left: -14px;
-    margin-top: -14px;
+    width: 8px;
+    height: 8px;
+    margin-left: -4px;
+    margin-top: -4px;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(168,85,247,0.15));
-    box-shadow: 0 6px 24px rgba(168,85,247,0.12), 0 2px 6px rgba(0,0,0,0.12);
+    background: rgba(168,85,247,0.6);
+    box-shadow: 0 0 6px rgba(168,85,247,0.4);
     transform: translate3d(0,0,0) scale(1);
-    transition: transform 180ms cubic-bezier(.2,.8,.2,1), background 180ms;
+    transition: transform 120ms ease-out, background 120ms;
     pointer-events: none;
     z-index: 10000;
   }
 
   .custom-cursor--active {
-    transform: translate3d(0,0,0) scale(1.8);
-    background: radial-gradient(circle at 30% 30%, rgba(168,85,247,0.95), rgba(168,85,247,0.25));
+    transform: translate3d(0,0,0) scale(1.3);
+    background: rgba(168,85,247,0.85);
+    box-shadow: 0 0 12px rgba(168,85,247,0.6);
   }
 
   /* Small trailing particles */
