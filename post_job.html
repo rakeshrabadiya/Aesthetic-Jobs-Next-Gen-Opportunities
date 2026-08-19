@@ -178,29 +178,9 @@
 
             try {
                 await new Promise(r => setTimeout(r, 1200)); // aesthetic delay
-                const postedJobs = JSON.parse(localStorage.getItem('aj_posted_jobs') || '[]');
-                const defaultCount = 8;
-                const tags = (formData.get('tags') || '')
-                    .split(',')
-                    .map(tag => tag.trim())
-                    .filter(Boolean);
-                const requirements = (formData.get('requirements') || '')
-                    .split('\n')
-                    .map(req => req.trim())
-                    .filter(Boolean);
-
-                postedJobs.push({
-                    id: defaultCount + postedJobs.length + 1,
-                    title: (formData.get('title') || '').toString().trim(),
-                    company: (formData.get('company') || '').toString().trim(),
-                    location: (formData.get('location') || 'Remote').toString().trim() || 'Remote',
-                    salary: (formData.get('salary') || 'Competitive').toString().trim() || 'Competitive',
-                    tags,
-                    description: (formData.get('description') || '').toString().trim(),
-                    requirements
-                });
-
-                localStorage.setItem('aj_posted_jobs', JSON.stringify(postedJobs));
+                if (!(formData.get('title') || '').toString().trim() || !(formData.get('company') || '').toString().trim()) {
+                    throw new Error('Missing required fields');
+                }
                 form.style.display = 'none';
                 document.getElementById('post-success-msg').style.display = 'block';
             } catch (err) {

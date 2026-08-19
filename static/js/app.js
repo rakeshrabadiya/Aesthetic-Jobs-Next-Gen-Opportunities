@@ -5,7 +5,6 @@
 
 const STORAGE_KEYS = {
     authUser: 'auth_user',
-    postedJobs: 'aj_posted_jobs',
     applications: 'aj_applications'
 };
 
@@ -216,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchJobs() {
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
-            allJobs = [...DEFAULT_JOBS, ...getStoredData(STORAGE_KEYS.postedJobs)];
+            allJobs = [...DEFAULT_JOBS];
             renderJobs(allJobs);
         } catch (error) {
             console.error('Error fetching jobs:', error);
