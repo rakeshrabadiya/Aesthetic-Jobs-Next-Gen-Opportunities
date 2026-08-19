@@ -3,6 +3,34 @@
  * Implements smooth DOM injections, hover tracking, and Modal Interactions
  */
 
+const STORAGE_KEYS = {
+    authUser: 'auth_user',
+    applications: 'aj_applications'
+};
+
+const DEFAULT_JOBS = [
+    { id: 1, title: "Senior Frontend Engineer", company: "Nexus Corp", location: "Remote", salary: "$130k - $160k", tags: ["React", "TypeScript", "UI/UX"], description: "We are looking for an experienced Frontend Engineer to lead the development of our next-gen aesthetic web platforms. You will work closely with design teams to implement pixel-perfect, highly animated user interfaces.", requirements: ["5+ years React/Next.js", "Strong grasp of CSS animations and motion", "Experience with WebGL is a plus"] },
+    { id: 2, title: "Backend Systems Architect", company: "Aether Data", location: "New York, NY", salary: "$150k - $180k", tags: ["Python", "Golang", "Distributed Systems"], description: "Aether Data is seeking a Backend Architect to design scalable distributed systems that handle millions of requests per second with ultra-low latency.", requirements: ["8+ years backend engineering", "Deep knowledge of microservices and Kubernetes", "Expertise in Python or Go"] },
+    { id: 3, title: "UI/UX Designer", company: "Zenith Studios", location: "San Francisco, CA", salary: "$110k - $140k", tags: ["Figma", "Interaction Design", "Prototyping"], description: "Join Zenith Studios to craft beautiful, intuitive, and mesmerizing digital experiences. We focus heavily on micro-interactions and dark-mode aesthetic mastery.", requirements: ["Portfolio demonstrating strong dark aesthetic", "Expertise in Figma constraints and variables", "Understanding of frontend feasibility"] },
+    { id: 4, title: "Full Stack Developer", company: "Quantum Innovations", location: "London, UK", salary: "£80k - £110k", tags: ["Vue.js", "Node.js", "PostgreSQL"], description: "Build end-to-end features for our quantum computing visualization platform. You will handle everything from database schema design to frontend state management.", requirements: ["Proficiency in Vue 3", "Strong Node.js/Express skills", "Database optimization experience"] },
+    { id: 5, title: "Machine Learning Engineer", company: "Synapse AI", location: "Toronto, CA", salary: "$140k - $170k", tags: ["PyTorch", "TensorFlow", "NLP"], description: "Help us build the next generation of Large Language Models. You will be responsible for training, fine-tuning, and deploying models to production.", requirements: ["Ph.D. or MS in Computer Science/AI", "Experience with Transformer architectures", "Strong Python and C++"] },
+    { id: 6, title: "DevOps Engineer", company: "CloudScape", location: "Remote", salary: "$120k - $150k", tags: ["AWS", "Terraform", "CI/CD"], description: "Ensure our infrastructure is robust, scalable, and secure. You'll automate our deployment pipelines and manage our multi-region AWS environments.", requirements: ["AWS Certified Solutions Architect", "Strong Terraform knowledge", "Experience with GitHub Actions"] },
+    { id: 7, title: "Product Manager", company: "Visionary Labs", location: "Austin, TX", salary: "$135k - $165k", tags: ["Agile", "Strategy", "User Research"], description: "Drive the vision and roadmap for our flagship SaaS product. Bridge the gap between engineering, design, and our enterprise clients.", requirements: ["4+ years Product Management", "Experience in B2B SaaS", "Data-driven decision making"] },
+    { id: 8, title: "Animatior & Motion Designer", company: "Fluid Dynamics", location: "Berlin, DE", salary: "€70k - €95k", tags: ["After Effects", "Lottie", "CSS"], description: "Bring our applications to life. We need someone obsessed with easing curves, timing, and making digital interfaces feel organic and alive.", requirements: ["Mastery of After Effects", "Experience converting animations to code (Lottie/Rive)", "An obsessive eye for detail"] }
+];
+
+function getStoredData(key) {
+    try {
+        return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+        return [];
+    }
+}
+
+function setStoredData(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const jobsContainer = document.getElementById('jobs-container');
     const searchInput = document.querySelector('.search-input');
@@ -33,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Global State
     let allJobs = [];
     let currentJob = null;
-    let isAuthenticated = localStorage.getItem('auth_user') ? true : false;
+    let isAuthenticated = localStorage.getItem(STORAGE_KEYS.authUser) ? true : false;
 
     // Initialize UI Auth State on Load
     updateAuthUI();
@@ -83,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isAuthenticated) {
                     // Handle Sign Out
                     isAuthenticated = false;
-                    localStorage.removeItem('auth_user');
+                    localStorage.removeItem(STORAGE_KEYS.authUser);
                     updateAuthUI();
                 } else {
                     openLoginModal();
@@ -121,20 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Artificial delay for aesthetic A-curve loader
                 await new Promise(r => setTimeout(r, 1000));
                 
-                const response = await fetch('/api/apply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                const applications = getStoredData(STORAGE_KEYS.applications);
+                applications.push({
+                    ...payload,
+                    created_at: new Date().toISOString()
                 });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    showSuccessMessage('apply');
-                } else {
-                    alert('Error: ' + data.message);
-                    resetSubmitButton('apply');
-                }
+                setStoredData(STORAGE_KEYS.applications, applications);
+                showSuccessMessage('apply');
 
             } catch (error) {
                 console.error("Submission error", error);
@@ -159,31 +180,25 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    isAuthenticated = true;
-                    localStorage.setItem('auth_user', data.user.name);
-                    
-                    // Show success state in modal
-                    if (authUserName) authUserName.innerText = data.user.name;
-                    showSuccessMessage('login');
-                    
-                    // Update main UI buttons, close modal automatically after delay
-                    setTimeout(() => {
-                        updateAuthUI();
-                        closeLoginModal();
-                    }, 1500);
-                } else {
-                    alert('Error: ' + data.message);
+                await new Promise(r => setTimeout(r, 700));
+                const displayName = payload.email.split('@')[0].trim();
+                if (!displayName) {
+                    alert('Error: Invalid email address');
                     resetSubmitButton('login');
+                    return;
                 }
+                isAuthenticated = true;
+                localStorage.setItem(STORAGE_KEYS.authUser, displayName.charAt(0).toUpperCase() + displayName.slice(1));
+                
+                // Show success state in modal
+                if (authUserName) authUserName.innerText = localStorage.getItem(STORAGE_KEYS.authUser);
+                showSuccessMessage('login');
+                
+                // Update main UI buttons, close modal automatically after delay
+                setTimeout(() => {
+                    updateAuthUI();
+                    closeLoginModal();
+                }, 1500);
 
             } catch (error) {
                 console.error("Login error", error);
@@ -200,9 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchJobs() {
         try {
             await new Promise(resolve => setTimeout(resolve, 800));
-            const response = await fetch('/api/jobs');
-            if (!response.ok) throw new Error('Network response was not ok');
-            allJobs = await response.json();
+            allJobs = [...DEFAULT_JOBS];
             renderJobs(allJobs);
         } catch (error) {
             console.error('Error fetching jobs:', error);

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post a Job | Aesthetic Jobs</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <link rel="stylesheet" href="/static/css/modal.css">
+    <link rel="stylesheet" href="./static/css/styles.css">
+    <link rel="stylesheet" href="./static/css/modal.css">
     <style>
         .post-container {
             max-width: 700px;
@@ -33,13 +33,13 @@
 
     <div class="app-container">
         <nav class="navbar animate-in">
-            <div class="logo"><a href="/" style="color: inherit; text-decoration: none;">AJ.</a></div>
+            <div class="logo"><a href="index.html" style="color: inherit; text-decoration: none;">AJ.</a></div>
             <div class="nav-links">
-                <a href="/">Discover</a>
-                <a href="/companies">Companies</a>
-                <a href="/about">About</a>
-                <a href="/contact">Contact</a>
-                <a href="/post-job" class="highlight-link active">Post a Job</a>
+                <a href="index.html">Discover</a>
+                <a href="companies.html">Companies</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="post_job.html" class="highlight-link active">Post a Job</a>
             </div>
             <button class="btn-primary login-btn">Sign In</button>
         </nav>
@@ -93,7 +93,7 @@
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                         <h3>Job Posted!</h3>
                         <p>Your job listing is now live on the platform.</p>
-                        <a href="/" class="btn-secondary" style="display: inline-block; margin-top: 2rem; text-decoration: none;">View Listings</a>
+                        <a href="index.html" class="btn-secondary" style="display: inline-block; margin-top: 2rem; text-decoration: none;">View Listings</a>
                     </div>
                 </div>
             </div>
@@ -145,7 +145,7 @@
     </div>
 
     <!-- Link the main app.js to handle login logic globally -->
-    <script src="/static/js/app.js"></script>
+    <script src="./static/js/app.js"></script>
     <script>
         const blobs = document.querySelectorAll('.blob');
         let ticking = false;
@@ -178,21 +178,11 @@
 
             try {
                 await new Promise(r => setTimeout(r, 1200)); // aesthetic delay
-                const response = await fetch('/api/post-job', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    form.style.display = 'none';
-                    document.getElementById('post-success-msg').style.display = 'block';
-                } else {
-                    alert('Error: ' + data.message);
-                    btn.disabled = false;
-                    btn.querySelector('span').style.display = 'inline-block';
-                    btn.querySelector('.spinner-small').style.display = 'none';
+                if (!(formData.get('title') || '').toString().trim() || !(formData.get('company') || '').toString().trim()) {
+                    throw new Error('Missing required fields');
                 }
+                form.style.display = 'none';
+                document.getElementById('post-success-msg').style.display = 'block';
             } catch (err) {
                 alert('Connection error');
                 btn.disabled = false;
